@@ -1,0 +1,296 @@
+{
+  "auditTimestamp": "2026-11-15T07:47:48.058Z",
+  "datasetFile": "public/maps/region.json",
+  "summary": {
+    "totalFeatures": 113972,
+    "buildingFootprints": 94515,
+    "buildingLevelsFeatures": 357,
+    "explicitHeightFeatures": 19,
+    "buildingPartFeatures": 0,
+    "roofTagFeatures": 0,
+    "genericBuildingYes": 91760,
+    "specificBuildingTypes": 2755
+  },
+  "levelDistribution": {
+    "0": 7,
+    "1": 71,
+    "2": 94,
+    "3": 71,
+    "4": 30,
+    "5": 64,
+    "6": 15,
+    "7": 3,
+    "8": 1,
+    "University of Cape Coast Catering Service": 1
+  },
+  "topSpecificBuildingClassifications": [
+    {
+      "type": "residential",
+      "count": 1594
+    },
+    {
+      "type": "house",
+      "count": 767
+    },
+    {
+      "type": "apartments",
+      "count": 169
+    },
+    {
+      "type": "commercial",
+      "count": 78
+    },
+    {
+      "type": "school",
+      "count": 26
+    },
+    {
+      "type": "retail",
+      "count": 26
+    },
+    {
+      "type": "hospital",
+      "count": 21
+    },
+    {
+      "type": "college",
+      "count": 14
+    },
+    {
+      "type": "roof",
+      "count": 14
+    },
+    {
+      "type": "university",
+      "count": 11
+    },
+    {
+      "type": "industrial",
+      "count": 8
+    },
+    {
+      "type": "transportation",
+      "count": 4
+    },
+    {
+      "type": "temple",
+      "count": 3
+    },
+    {
+      "type": "train_station",
+      "count": 3
+    },
+    {
+      "type": "no",
+      "count": 3
+    }
+  ],
+  "all19ExplicitHeights": [
+    {
+      "id": "way/1360049546",
+      "height": "100",
+      "name": "Durga Bhavani",
+      "building": "house"
+    },
+    {
+      "id": "way/401325709",
+      "height": "13",
+      "name": "Jagan house",
+      "building": "yes"
+    },
+    {
+      "id": "way/414124237",
+      "height": "30",
+      "name": "siddharatha e m high school",
+      "building": "yes"
+    },
+    {
+      "id": "way/343403624",
+      "height": "70",
+      "name": "sweetmagic",
+      "building": "yes"
+    },
+    {
+      "id": "way/1360051053",
+      "height": "200",
+      "name": "Trends shopping mall",
+      "building": "commercial"
+    },
+    {
+      "id": "way/410551486",
+      "height": "2",
+      "name": "Vundavalli",
+      "building": "yes"
+    },
+    {
+      "id": "way/343200059",
+      "height": "0",
+      "name": null,
+      "building": "yes"
+    },
+    {
+      "id": "way/1372266196",
+      "height": "3",
+      "name": null,
+      "building": "yes"
+    },
+    {
+      "id": "way/1372266195",
+      "height": "2",
+      "name": null,
+      "building": "yes"
+    },
+    {
+      "id": "way/1253864365",
+      "height": "3",
+      "name": null,
+      "building": "yes"
+    },
+    {
+      "id": "way/740768561",
+      "height": "15",
+      "name": null,
+      "building": "yes"
+    },
+    {
+      "id": "way/1360050234",
+      "height": "40",
+      "name": "Durga Bhavani",
+      "building": "house"
+    },
+    {
+      "id": "way/826882226",
+      "height": "0",
+      "name": null,
+      "building": null
+    },
+    {
+      "id": "way/826893250",
+      "height": "0.76",
+      "name": null,
+      "building": null
+    },
+    {
+      "id": "way/402826667",
+      "height": "70",
+      "name": "sarswati",
+      "building": "yes"
+    },
+    {
+      "id": "way/410551400",
+      "height": "6",
+      "name": "Vundavalli",
+      "building": "house"
+    },
+    {
+      "id": "way/411927651",
+      "height": "15",
+      "name": "Karthikeyan",
+      "building": "yes"
+    },
+    {
+      "id": "way/401165038",
+      "height": "30",
+      "name": "my house",
+      "building": "yes"
+    },
+    {
+      "id": "way/1360052747",
+      "height": "200",
+      "name": "Naidu vari kunda biryani",
+      "building": "commercial"
+    }
+  ],
+  "sampleBuildingLevels": [
+    {
+      "id": "way/343148414",
+      "levels": "6",
+      "name": "Isha Towers Kakatiya",
+      "building": "yes"
+    },
+    {
+      "id": "way/414061838",
+      "levels": "2",
+      "name": null,
+      "building": "house"
+    },
+    {
+      "id": "way/342932502",
+      "levels": "3",
+      "name": null,
+      "building": "residential"
+    },
+    {
+      "id": "way/1314343427",
+      "levels": "5",
+      "name": null,
+      "building": "apartments"
+    },
+    {
+      "id": "way/1360049546",
+      "levels": "3",
+      "name": "Durga Bhavani",
+      "building": "house"
+    },
+    {
+      "id": "way/413665771",
+      "levels": "5",
+      "name": "Vayu Apartments",
+      "building": "residential"
+    },
+    {
+      "id": "way/414072398",
+      "levels": "5",
+      "name": "Flour mill",
+      "building": "house"
+    },
+    {
+      "id": "way/343387673",
+      "levels": "2",
+      "name": null,
+      "building": "yes"
+    },
+    {
+      "id": "way/1246229548",
+      "levels": "2",
+      "name": "41-5-44",
+      "building": "house"
+    },
+    {
+      "id": "way/1291760601",
+      "levels": "5",
+      "name": null,
+      "building": "house"
+    },
+    {
+      "id": "way/1314343413",
+      "levels": "5",
+      "name": null,
+      "building": "apartments"
+    },
+    {
+      "id": "way/1314328270",
+      "levels": "3",
+      "name": null,
+      "building": "house"
+    },
+    {
+      "id": "way/342928286",
+      "levels": "7",
+      "name": "Furtune Murali Park",
+      "building": "residential"
+    },
+    {
+      "id": "way/401532468",
+      "levels": "3",
+      "name": null,
+      "building": "house"
+    },
+    {
+      "id": "way/414061829",
+      "levels": "2",
+      "name": null,
+      "building": "house"
+    }
+  ]
+}

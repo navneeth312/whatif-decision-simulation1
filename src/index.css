@@ -1,0 +1,168 @@
+@import "tailwindcss";
+
+@layer base {
+  :root {
+    color-scheme: dark;
+    font-family: 'Plus Jakarta Sans', 'Inter', -apple-system, BlinkMacSystemFont, sans-serif;
+  }
+
+  body {
+    background-color: #060913;
+    color: #f8fafc;
+    overflow-x: hidden;
+  }
+
+  code, pre, .font-mono {
+    font-family: 'JetBrains Mono', ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, monospace;
+  }
+}
+
+@keyframes whatif-hologram-scan {
+  from { transform: translateY(-18%); }
+  to { transform: translateY(18%); }
+}
+
+.hologram-canvas canvas {
+  filter: saturate(1.42) hue-rotate(8deg) brightness(1.08);
+  transition: filter 350ms ease;
+}
+
+.hologram-map-overlay {
+  position: absolute;
+  inset: 0;
+  z-index: 5;
+  overflow: hidden;
+  pointer-events: none;
+  background: linear-gradient(135deg, rgba(4, 32, 62, 0.14), rgba(5, 115, 145, 0.12));
+  mix-blend-mode: screen;
+}
+
+.hologram-map-overlay::before {
+  content: '';
+  position: absolute;
+  inset: 0;
+  background-image:
+    linear-gradient(rgba(56, 220, 255, 0.12) 1px, transparent 1px),
+    linear-gradient(90deg, rgba(56, 220, 255, 0.12) 1px, transparent 1px);
+  background-size: 36px 36px;
+  opacity: 0.34;
+  mask-image: linear-gradient(to bottom, transparent, black 20%, black 82%, transparent);
+}
+
+.hologram-map-overlay::after {
+  content: '';
+  position: absolute;
+  inset: -20% 0;
+  background: repeating-linear-gradient(
+    to bottom,
+    transparent 0,
+    transparent 5px,
+    rgba(76, 236, 255, 0.08) 6px,
+    transparent 7px
+  );
+  animation: whatif-hologram-scan 8s ease-in-out infinite alternate;
+  opacity: 0.8;
+}
+
+.reduced-motion .hologram-map-overlay::after {
+  animation: none;
+}
+.reduced-motion .hologram-canvas canvas {
+  transition: none;
+}
+
+@media (prefers-reduced-motion: reduce) {
+  .hologram-map-overlay::after { animation: none; }
+  .hologram-canvas canvas { transition: none; }
+}
+
+/* Command center glowing surfaces & borders matching reference */
+.whatif-canvas-bg {
+  background:
+    radial-gradient(circle at 18% 12%, rgba(99, 102, 241, 0.14) 0%, transparent 42%),
+    radial-gradient(circle at 82% 18%, rgba(6, 182, 212, 0.12) 0%, transparent 40%),
+    radial-gradient(circle at 50% 92%, rgba(139, 92, 246, 0.10) 0%, transparent 48%),
+    linear-gradient(180deg, #060913 0%, #080d1c 55%, #050811 100%);
+}
+
+.whatif-card {
+  background: linear-gradient(155deg, rgba(15, 23, 42, 0.86) 0%, rgba(9, 14, 28, 0.92) 100%);
+  border: 1px solid rgba(99, 102, 241, 0.24);
+  box-shadow:
+    0 10px 30px -10px rgba(2, 6, 23, 0.8),
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.07);
+}
+
+.whatif-card-glow {
+  background: linear-gradient(155deg, rgba(17, 25, 48, 0.92) 0%, rgba(10, 15, 30, 0.95) 100%);
+  border: 1px solid rgba(56, 189, 248, 0.32);
+  box-shadow:
+    0 12px 32px -8px rgba(6, 182, 212, 0.15),
+    0 0 20px -6px rgba(99, 102, 241, 0.2),
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.1);
+}
+
+.whatif-pill-primary {
+  background: linear-gradient(90deg, #6366f1 0%, #8b5cf6 55%, #a855f7 100%);
+  box-shadow:
+    0 4px 20px -2px rgba(139, 92, 246, 0.5),
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.25);
+}
+
+.whatif-pill-primary:hover {
+  background: linear-gradient(90deg, #4f46e5 0%, #7c3aed 55%, #9333ea 100%);
+  box-shadow:
+    0 6px 24px -2px rgba(139, 92, 246, 0.65),
+    inset 0 1px 0 0 rgba(255, 255, 255, 0.35);
+}
+
+/* Custom subtle scrollbars */
+::-webkit-scrollbar {
+  width: 6px;
+  height: 6px;
+}
+
+::-webkit-scrollbar-track {
+  background: rgba(6, 9, 19, 0.7);
+}
+
+::-webkit-scrollbar-thumb {
+  background: rgba(71, 85, 105, 0.45);
+  border-radius: 9999px;
+}
+
+::-webkit-scrollbar-thumb:hover {
+  background: rgba(99, 102, 241, 0.65);
+}
+
+/* Keyboard accessibility focus states */
+button:focus-visible,
+[role="button"]:focus-visible,
+select:focus-visible,
+input:focus-visible,
+textarea:focus-visible,
+a:focus-visible {
+  outline: 2px solid #22d3ee;
+  outline-offset: 2px;
+}
+
+.reduced-motion *,
+.reduced-motion *::before,
+.reduced-motion *::after {
+  animation-duration: 0.01ms !important;
+  animation-iteration-count: 1 !important;
+  transition-duration: 0.01ms !important;
+  scroll-behavior: auto !important;
+}
+
+/* Respect prefers-reduced-motion */
+@media (prefers-reduced-motion: reduce) {
+  *,
+  *::before,
+  *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+    scroll-behavior: auto !important;
+  }
+}

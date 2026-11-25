@@ -1,0 +1,8 @@
+{
+  "name": "WhatIf — Antigravity Transfer",
+  "description": "Infrastructure decision-simulation platform for water distribution, electrical grid, and road traffic networks.",
+  "requestFramePermissions": [],
+  "majorCapabilities": [
+    "MAJOR_CAPABILITY_SERVER_SIDE_GEMINI_API"
+  ]
+}
