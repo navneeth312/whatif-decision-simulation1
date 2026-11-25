@@ -1,4 +1,5 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useRef, useState } from 'react';
+import { useModalA11y } from '../utils/useModalA11y';
 import {
   X,
   Ban,
@@ -80,13 +81,8 @@ export const ConnectedDecisionToolsModal: React.FC<ConnectedDecisionToolsModalPr
     setEvaluatedAltId(fallback);
   }, [scenario.id, scenario.alternatives, selectedAlternativeId]);
 
-  useEffect(() => {
-    const onKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose();
-    };
-    window.addEventListener('keydown', onKeyDown);
-    return () => window.removeEventListener('keydown', onKeyDown);
-  }, [onClose]);
+  const dialogRef = useRef<HTMLDivElement>(null);
+  useModalA11y(true, onClose, dialogRef);
 
   const preferredAlt =
     scenario.alternatives.find((a) => a.id === evaluatedAltId) ||
@@ -107,6 +103,7 @@ export const ConnectedDecisionToolsModal: React.FC<ConnectedDecisionToolsModalPr
   if (!preferredAlt) {
     return (
       <div
+        ref={dialogRef}
         role="dialog"
         aria-modal="true"
         aria-label="Connected Decision Tools"
@@ -212,6 +209,7 @@ export const ConnectedDecisionToolsModal: React.FC<ConnectedDecisionToolsModalPr
 
   return (
     <div
+      ref={dialogRef}
       role="dialog"
       aria-modal="true"
       aria-label="Connected Decision Tools"
@@ -265,13 +263,15 @@ export const ConnectedDecisionToolsModal: React.FC<ConnectedDecisionToolsModalPr
         </div>
 
         {/* Tab Selector: All 14 entries */}
-        <div className="px-6 py-2 bg-slate-950 border-b border-slate-800 flex items-center gap-1.5 overflow-x-auto text-xs font-semibold scrollbar-none">
+        <div role="tablist" aria-label="Decision analysis tools" className="px-6 py-2 bg-slate-950 border-b border-slate-800 flex items-center gap-1.5 overflow-x-auto text-xs font-semibold scrollbar-none">
           {toolsList.map((tab) => {
             const Icon = tab.icon;
             const isActive = activeTool === tab.id;
             return (
               <button
                 type="button"
+                role="tab"
+                aria-selected={isActive}
                 key={tab.id}
                 onClick={() => setActiveTool(tab.id)}
                 className={`px-3 py-1.5 rounded-xl flex items-center gap-1.5 transition shrink-0 whitespace-nowrap cursor-pointer ${
@@ -314,7 +314,7 @@ export const ConnectedDecisionToolsModal: React.FC<ConnectedDecisionToolsModalPr
                 <div className="p-4 rounded-xl bg-slate-950 border border-slate-800">
                   <span className="text-xs text-slate-400 block mb-1">Critical Assumption</span>
                   <strong className="text-white text-sm">{breakerResult.criticalAssumptionName}</strong>
-                  <span className="text-xs text-slate-500 block mt-1">
+                  <span className="text-xs text-slate-400 block mt-1">
                     Nominal: {breakerResult.nominalValue} {breakerResult.unit}
                   </span>
                 </div>
@@ -322,7 +322,7 @@ export const ConnectedDecisionToolsModal: React.FC<ConnectedDecisionToolsModalPr
                 <div className="p-4 rounded-xl bg-slate-950 border border-slate-800">
                   <span className="text-xs text-slate-400 block mb-1">Required Perturbation</span>
                   <strong className="text-cyan-400 text-base">+{breakerResult.pctShiftRequired}%</strong>
-                  <span className="text-xs text-slate-500 block mt-1">
+                  <span className="text-xs text-slate-400 block mt-1">
                     Break value: {breakerResult.breakThresholdValue} {breakerResult.unit}
                   </span>
                 </div>
@@ -332,7 +332,7 @@ export const ConnectedDecisionToolsModal: React.FC<ConnectedDecisionToolsModalPr
                   <strong className="text-amber-400 text-sm capitalize">
                     {breakerResult.breakType.replace('_', ' ')}
                   </strong>
-                  <span className="text-xs text-slate-500 block mt-1">
+                  <span className="text-xs text-slate-400 block mt-1">
                     Preferred: {preferredAlt.name}
                   </span>
                 </div>
@@ -350,7 +350,7 @@ export const ConnectedDecisionToolsModal: React.FC<ConnectedDecisionToolsModalPr
                   </span>
                   <div className="text-4xl font-black text-cyan-400 mt-1">
                     {drsReport.overallScore}
-                    <span className="text-lg text-slate-500 font-normal"> / 100</span>
+                    <span className="text-lg text-slate-400 font-normal"> / 100</span>
                   </div>
                   <span className="text-xs text-emerald-400 font-semibold block mt-1">
                     Calculated over {drsReport.trialsCount} explicit stress trials (Seed: {drsReport.seed})
@@ -526,8 +526,9 @@ export const ConnectedDecisionToolsModal: React.FC<ConnectedDecisionToolsModalPr
           {activeTool === 'reverse_solver' && (
             <div className="space-y-4">
               <div className="flex items-center gap-3">
-                <label className="text-xs text-slate-300 font-semibold">Target Output Performance:</label>
+                <label htmlFor="reverse-solver-target" className="text-xs text-slate-300 font-semibold">Target Output Performance:</label>
                 <input
+                  id="reverse-solver-target"
                   type="text"
                   placeholder="Enter target"
                   value={targetPerfInput}

@@ -70,13 +70,17 @@ export function solvePowerGrid(network: PowerGridNetwork): PowerGridSimulationRe
   const busLoadMw = new Float64Array(nBuses);
   for (const load of network.loads) {
     const idx = busIndexMap.get(load.busId);
-    if (idx !== undefined) busLoadMw[idx] += load.mw;
+    if (idx !== undefined) {
+      busLoadMw[idx] += Number.isFinite(load.mw) ? load.mw : 0;
+    }
   }
 
   const busGenMw = new Float64Array(nBuses);
   for (const gen of network.generators) {
     const idx = busIndexMap.get(gen.busId);
-    if (idx !== undefined) busGenMw[idx] += gen.scheduledMw;
+    if (idx !== undefined) {
+      busGenMw[idx] += Number.isFinite(gen.scheduledMw) ? gen.scheduledMw : 0;
+    }
   }
 
   // Find slack generator or nominate primary slack bus
@@ -197,7 +201,7 @@ export function solvePowerGrid(network: PowerGridNetwork): PowerGridSimulationRe
 
     // Solve B_red * theta_red = P_red
     const theta_red = solveReducedSystem(B_red, P_red);
-    if (!theta_red) {
+    if (!theta_red || !theta_red.every(Number.isFinite)) {
       violations.push(`Susceptance matrix for island containing bus '${buses[refIdx].id}' is singular.`);
       hasIslandError = true;
       continue;

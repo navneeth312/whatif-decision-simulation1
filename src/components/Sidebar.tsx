@@ -75,6 +75,7 @@ export const Sidebar: React.FC<SidebarProps> = ({
 
         {/* Quick Action: Create Scenario button */}
         <button
+          type="button"
           onClick={onOpenCreateModal}
           aria-label="Create New Scenario"
           className="w-full mb-6 py-2.5 px-4 rounded-xl bg-gradient-to-r from-indigo-600 via-purple-600 to-pink-600 hover:from-indigo-500 hover:via-purple-500 hover:to-pink-500 text-white font-semibold text-xs shadow-lg shadow-indigo-600/25 flex items-center justify-center gap-2 transition hover:scale-[1.02] active:scale-[0.98]"
@@ -84,23 +85,25 @@ export const Sidebar: React.FC<SidebarProps> = ({
         </button>
 
         {/* Navigation items */}
-        <nav className="space-y-1.5">
+        <nav aria-label="Workspace Sections" className="space-y-1.5">
           {navItems.map((item) => {
             const Icon = item.icon;
             const isActive = activeTab === item.id;
             return (
               <button
+                type="button"
                 key={item.id}
                 onClick={() => onSelectTab(item.id as ActiveTab)}
                 aria-label={item.label}
+                aria-current={isActive ? 'page' : undefined}
                 className={`w-full flex items-center justify-between px-3.5 py-2.5 rounded-xl text-xs font-semibold transition-all ${
                   isActive
                     ? 'bg-indigo-600/20 text-indigo-300 border border-indigo-500/40 shadow-sm'
-                    : 'text-slate-400 hover:text-slate-200 hover:bg-slate-900/60'
+                    : 'text-slate-300 hover:text-white hover:bg-slate-900/60'
                 }`}
               >
                 <div className="flex items-center gap-3">
-                  <Icon className={`w-4 h-4 ${isActive ? 'text-cyan-400' : 'text-slate-500'}`} />
+                  <Icon className={`w-4 h-4 ${isActive ? 'text-cyan-400' : 'text-slate-400'}`} />
                   <span>{item.label}</span>
                 </div>
                 {'badge' in item && (

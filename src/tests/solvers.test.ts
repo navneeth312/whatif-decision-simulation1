@@ -434,4 +434,22 @@ describe('WhatIf Domain Solvers, Diagnostics, Problem Catalog & Security Suite',
       assert.ok(roughnessCheck.errors.some((error) => error.includes('absolute roughness')));
     }
   });
+
+  it('8. Solver Reliability: non-finite inputs are clamped safely without NaN propagation', () => {
+    const tNet = structuredClone(DEFAULT_SCENARIOS[0].trafficNetwork!);
+    tNet.cells[0].initialDensityVehKmPerLane = Number.NaN;
+    const tRes = solveTrafficNetwork(tNet);
+    assert.ok(Number.isFinite(tRes.averageSpeedKmh));
+    assert.ok(tRes.warnings.some((w) => w.includes('non-finite')));
+
+    const wNet = structuredClone(DEFAULT_SCENARIOS[1].waterNetwork!);
+    wNet.waterDensityKgM3 = -500;
+    const wRes = solveWaterNetwork(wNet);
+    assert.ok(Number.isFinite(wRes.minPressureKPa) && wRes.converged);
+
+    const pNet = structuredClone(DEFAULT_SCENARIOS[2].powerNetwork!);
+    pNet.loads[0].mw = Number.NaN;
+    const pRes = solvePowerGrid(pNet);
+    assert.ok(Number.isFinite(pRes.totalLoadMw) && pRes.converged);
+  });
 });

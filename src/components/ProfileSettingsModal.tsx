@@ -1,4 +1,5 @@
-import React, { useEffect, useState } from 'react';
+import React, { useRef, useState } from 'react';
+import { useModalA11y } from '../utils/useModalA11y';
 import { X, ShieldCheck, Sliders, HardDrive, RotateCcw, Check } from 'lucide-react';
 import {
   DEFAULT_LOCAL_PROFILE,
@@ -40,14 +41,8 @@ export const ProfileSettingsModal: React.FC<ProfileSettingsModalProps> = ({
   });
   const [confirmReset, setConfirmReset] = useState(false);
   const [savedNotice, setSavedNotice] = useState(false);
-
-  useEffect(() => {
-    const handleKey = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose();
-    };
-    window.addEventListener('keydown', handleKey);
-    return () => window.removeEventListener('keydown', handleKey);
-  }, [onClose]);
+  const dialogRef = useRef<HTMLDivElement>(null);
+  useModalA11y(true, onClose, dialogRef);
 
   const handleSave = (e: React.FormEvent) => {
     e.preventDefault();
@@ -76,6 +71,7 @@ export const ProfileSettingsModal: React.FC<ProfileSettingsModalProps> = ({
 
   return (
     <div
+      ref={dialogRef}
       role="dialog"
       aria-modal="true"
       aria-labelledby="local-profile-settings-title"
@@ -243,7 +239,7 @@ export const ProfileSettingsModal: React.FC<ProfileSettingsModalProps> = ({
           </div>
 
           <div className="flex items-center justify-between pt-2 border-t border-slate-800">
-            <span className="text-[11px] text-emerald-400 font-semibold">
+            <span role="status" aria-live="polite" className="text-[11px] text-emerald-400 font-semibold">
               {savedNotice && 'Preferences saved to local browser storage.'}
             </span>
             <div className="flex items-center gap-2">

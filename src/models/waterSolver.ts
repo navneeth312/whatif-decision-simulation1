@@ -19,9 +19,15 @@ export function solveWaterNetwork(
   const tolerance = options?.tolerance ?? 1e-4; // m³/s residual threshold
   const minPressureWarningKPa = options?.minPressureWarningKPa ?? 180; // standard municipal 180 kPa
 
-  const rho = network.waterDensityKgM3 || 1000;
-  const g = network.gravityMs2 || 9.81;
-  const mu = network.dynamicViscosityPaS || 1.002e-3; // water near 20 °C, Pa·s
+  const rho = Number.isFinite(network.waterDensityKgM3) && (network.waterDensityKgM3 as number) > 0
+    ? (network.waterDensityKgM3 as number)
+    : 1000;
+  const g = Number.isFinite(network.gravityMs2) && (network.gravityMs2 as number) > 0
+    ? (network.gravityMs2 as number)
+    : 9.81;
+  const mu = Number.isFinite(network.dynamicViscosityPaS) && (network.dynamicViscosityPaS as number) > 0
+    ? (network.dynamicViscosityPaS as number)
+    : 1.002e-3; // water near 20 °C, Pa·s
   const nu = mu / rho; // m²/s
 
   // Separate fixed-head nodes (reservoirs/tanks with explicit head) and unknown junctions
@@ -192,7 +198,7 @@ export function solveWaterNetwork(
     for (let i = 0; i < N; i++) RHS[i] = -R[i];
 
     const delta = solveLinearSystem(J, RHS);
-    if (!delta) {
+    if (!delta || !delta.every(Number.isFinite)) {
       warnings.push('Jacobian matrix singular or poorly conditioned at iteration ' + iterations);
       break;
     }
@@ -200,7 +206,6 @@ export function solveWaterNetwork(
     // Damping factor with bounds check to keep pressure reasonable
     let alpha = 1.0;
     for (let i = 0; i < N; i++) {
-      const proposedHead = H[i] + alpha * delta[i];
       // Limit excessive head jumps in a single step
       if (Math.abs(alpha * delta[i]) > 40) {
         alpha = Math.min(alpha, 40 / Math.abs(delta[i]));

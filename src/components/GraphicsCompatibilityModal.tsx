@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
+import { useModalA11y } from '../utils/useModalA11y';
 import {
   Monitor,
   Cpu,
@@ -127,6 +128,8 @@ export const GraphicsCompatibilityModal: React.FC<GraphicsCompatibilityModalProp
   const [caps, setCaps] = useState<GraphicsCapabilities | null>(null);
   const [selectedProfile, setSelectedProfile] = useState<GraphicsProfile>('recommended');
   const [rememberPreference, setRememberPreference] = useState<boolean>(true);
+  const dialogRef = useRef<HTMLDivElement>(null);
+  useModalA11y(isOpen, onClose, dialogRef);
 
   useEffect(() => {
     if (isOpen) {
@@ -156,7 +159,13 @@ export const GraphicsCompatibilityModal: React.FC<GraphicsCompatibilityModalProp
   };
 
   return (
-    <div className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md animate-fade-in">
+    <div
+      ref={dialogRef}
+      role="dialog"
+      aria-modal="true"
+      aria-labelledby="graphics-compat-title"
+      className="fixed inset-0 z-50 flex items-center justify-center p-4 bg-slate-950/80 backdrop-blur-md animate-fade-in"
+    >
       <div className="relative w-full max-w-2xl rounded-2xl bg-slate-900 border border-cyan-500/40 shadow-2xl shadow-cyan-950/60 overflow-hidden flex flex-col max-h-[92vh]">
         {/* Header */}
         <div className="flex items-center justify-between p-4 sm:p-5 border-b border-slate-800 bg-slate-950/60">
@@ -165,7 +174,7 @@ export const GraphicsCompatibilityModal: React.FC<GraphicsCompatibilityModalProp
               <Monitor className="w-5 h-5" />
             </div>
             <div>
-              <h2 className="text-base sm:text-lg font-bold text-white flex items-center gap-2">
+              <h2 id="graphics-compat-title" className="text-base sm:text-lg font-bold text-white flex items-center gap-2">
                 <span>3D Digital Twin — Graphics Configuration</span>
                 <span className="px-2 py-0.5 rounded-full text-[10px] font-mono font-bold bg-cyan-500/20 text-cyan-300 border border-cyan-500/40">
                   GPU Pre-Flight
@@ -216,14 +225,14 @@ export const GraphicsCompatibilityModal: React.FC<GraphicsCompatibilityModalProp
           </div>
 
           {/* 4 Profile Cards */}
-          <div className="space-y-2">
-            <label className="text-xs font-bold text-slate-200 block">
+          <div className="space-y-2" role="radiogroup" aria-labelledby="graphics-profile-heading">
+            <span id="graphics-profile-heading" className="text-xs font-bold text-slate-200 block">
               Select Graphics Profile:
-            </label>
+            </span>
 
             {/* Profile 1: Recommended Quality */}
-            <div
-              onClick={() => setSelectedProfile('recommended')}
+            <label
+              htmlFor="graphics-profile-recommended"
               className={`p-3.5 rounded-xl border transition cursor-pointer flex items-start gap-3 ${
                 selectedProfile === 'recommended'
                   ? 'bg-cyan-500/10 border-cyan-400/80 shadow-md shadow-cyan-500/10 ring-1 ring-cyan-400/40'
@@ -231,6 +240,7 @@ export const GraphicsCompatibilityModal: React.FC<GraphicsCompatibilityModalProp
               }`}
             >
               <input
+                id="graphics-profile-recommended"
                 type="radio"
                 name="graphics-profile"
                 checked={selectedProfile === 'recommended'}
@@ -252,11 +262,11 @@ export const GraphicsCompatibilityModal: React.FC<GraphicsCompatibilityModalProp
                   natural vegetation canopy clusters, anti-aliased geometry, and dynamic daylight/cyber lighting.
                 </p>
               </div>
-            </div>
+            </label>
 
             {/* Profile 2: High Quality */}
-            <div
-              onClick={() => setSelectedProfile('high')}
+            <label
+              htmlFor="graphics-profile-high"
               className={`p-3.5 rounded-xl border transition cursor-pointer flex items-start gap-3 ${
                 selectedProfile === 'high'
                   ? 'bg-cyan-500/10 border-cyan-400/80 shadow-md shadow-cyan-500/10 ring-1 ring-cyan-400/40'
@@ -264,6 +274,7 @@ export const GraphicsCompatibilityModal: React.FC<GraphicsCompatibilityModalProp
               }`}
             >
               <input
+                id="graphics-profile-high"
                 type="radio"
                 name="graphics-profile"
                 checked={selectedProfile === 'high'}
@@ -285,11 +296,11 @@ export const GraphicsCompatibilityModal: React.FC<GraphicsCompatibilityModalProp
                   instancing, full lane marking ribbons, and extended horizon draw distance. Recommended for dedicated NVIDIA/AMD/Apple GPUs.
                 </p>
               </div>
-            </div>
+            </label>
 
             {/* Profile 3: Performance Mode */}
-            <div
-              onClick={() => setSelectedProfile('performance')}
+            <label
+              htmlFor="graphics-profile-performance"
               className={`p-3.5 rounded-xl border transition cursor-pointer flex items-start gap-3 ${
                 selectedProfile === 'performance'
                   ? 'bg-cyan-500/10 border-cyan-400/80 shadow-md shadow-cyan-500/10 ring-1 ring-cyan-400/40'
@@ -297,6 +308,7 @@ export const GraphicsCompatibilityModal: React.FC<GraphicsCompatibilityModalProp
               }`}
             >
               <input
+                id="graphics-profile-performance"
                 type="radio"
                 name="graphics-profile"
                 checked={selectedProfile === 'performance'}
@@ -318,11 +330,11 @@ export const GraphicsCompatibilityModal: React.FC<GraphicsCompatibilityModalProp
                   60 FPS on low-power laptops, integrated Intel Iris/UHD graphics, or battery operation.
                 </p>
               </div>
-            </div>
+            </label>
 
             {/* Profile 4: 2D Interactive GIS Map Fallback */}
-            <div
-              onClick={() => setSelectedProfile('2d')}
+            <label
+              htmlFor="graphics-profile-2d"
               className={`p-3.5 rounded-xl border transition cursor-pointer flex items-start gap-3 ${
                 selectedProfile === '2d'
                   ? 'bg-cyan-500/10 border-cyan-400/80 shadow-md shadow-cyan-500/10 ring-1 ring-cyan-400/40'
@@ -330,6 +342,7 @@ export const GraphicsCompatibilityModal: React.FC<GraphicsCompatibilityModalProp
               }`}
             >
               <input
+                id="graphics-profile-2d"
                 type="radio"
                 name="graphics-profile"
                 checked={selectedProfile === '2d'}
@@ -350,7 +363,7 @@ export const GraphicsCompatibilityModal: React.FC<GraphicsCompatibilityModalProp
                   Traditional 2D vector and Carto/OSM raster map interface. Runs cleanly on any device with zero 3D WebGL overhead.
                 </p>
               </div>
-            </div>
+            </label>
           </div>
 
           {/* Remember Preference Checkbox */}

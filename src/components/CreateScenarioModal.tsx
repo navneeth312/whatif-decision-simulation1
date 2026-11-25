@@ -1,4 +1,5 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import React, { useState, useMemo, useEffect, useRef } from 'react';
+import { useModalA11y } from '../utils/useModalA11y';
 import {
   X,
   Building2,
@@ -95,13 +96,8 @@ export const CreateScenarioModal: React.FC<CreateScenarioModalProps> = ({
     return base.filter((p) => p.category !== 'village');
   }, [discoveredPlaces]);
 
-  useEffect(() => {
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose();
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [onClose]);
+  const dialogRef = useRef<HTMLDivElement>(null);
+  useModalA11y(true, onClose, dialogRef);
 
   useEffect(() => {
     let active = true;
@@ -368,6 +364,7 @@ export const CreateScenarioModal: React.FC<CreateScenarioModalProps> = ({
 
   return (
     <div
+      ref={dialogRef}
       role="dialog"
       aria-modal="true"
       aria-label="Create New Scenario"
@@ -416,7 +413,7 @@ export const CreateScenarioModal: React.FC<CreateScenarioModalProps> = ({
               </div>
               <span
                 className={`font-semibold ${
-                  step === s.num ? 'text-white' : 'text-slate-500'
+                  step === s.num ? 'text-white' : 'text-slate-400'
                 }`}
               >
                 {s.label}
@@ -588,7 +585,7 @@ export const CreateScenarioModal: React.FC<CreateScenarioModalProps> = ({
                     onChange={(event) => setStudyAreaLabel(event.target.value.slice(0, 100))}
                     placeholder="e.g. Inner Ring Road or New Layout"
                     maxLength={100}
-                    className="mt-1 w-full rounded-lg border border-slate-700 bg-slate-950 px-2.5 py-2 text-xs text-white placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-cyan-500/50"
+                    className="mt-1 w-full rounded-lg border border-slate-700 bg-slate-950 px-2.5 py-2 text-xs text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-cyan-500/50"
                   />
                 </label>
               </div>
@@ -636,10 +633,10 @@ export const CreateScenarioModal: React.FC<CreateScenarioModalProps> = ({
                       rows={3}
                       maxLength={1600}
                       placeholder="Example: A new residential layout has no connected water supply yet. Estimate the pressure and demand requirements under the stated concept assumptions, compare possible supply options, and test what happens during a dry-season demand increase."
-                      className="mt-1 w-full resize-y rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-xs text-white placeholder:text-slate-600 focus:outline-none focus:ring-2 focus:ring-cyan-500/50"
+                      className="mt-1 w-full resize-y rounded-lg border border-slate-700 bg-slate-950 px-3 py-2 text-xs text-white placeholder:text-slate-400 focus:outline-none focus:ring-2 focus:ring-cyan-500/50"
                     />
                   </label>
-                  <p className="text-[9px] leading-relaxed text-slate-500">
+                  <p className="text-[9px] leading-relaxed text-slate-400">
                     Privacy: when you click Generate, the problem text and the selected solver’s allowed parameters are sent to Google Gemini. Free-tier content may be used by Google to improve its services. Do not enter personal or confidential data.
                   </p>
                   <p className="text-[9px] leading-relaxed text-amber-200/80">
@@ -685,10 +682,11 @@ export const CreateScenarioModal: React.FC<CreateScenarioModalProps> = ({
               )}
 
               <div>
-                <label className="text-xs font-bold uppercase tracking-wider text-slate-400 block mb-1">
+                <label htmlFor="create-scenario-title" className="text-xs font-bold uppercase tracking-wider text-slate-400 block mb-1">
                   Scenario Title
                 </label>
                 <input
+                  id="create-scenario-title"
                   type="text"
                   value={title}
                   onChange={(e) => {
@@ -707,14 +705,15 @@ export const CreateScenarioModal: React.FC<CreateScenarioModalProps> = ({
 
               <div>
                 <div className="flex justify-between items-center mb-1">
-                  <label className="text-xs font-bold uppercase tracking-wider text-slate-400">
+                  <label htmlFor="create-scenario-description" className="text-xs font-bold uppercase tracking-wider text-slate-400">
                     Problem Description
                   </label>
-                  <span className="text-[10px] text-slate-500">
+                  <span className="text-[10px] text-slate-400">
                     {description.length}/300
                   </span>
                 </div>
                 <textarea
+                  id="create-scenario-description"
                   value={description}
                   onChange={(e) => setDescription(e.target.value.slice(0, 300))}
                   rows={2}

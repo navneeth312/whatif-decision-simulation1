@@ -1,5 +1,6 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef, useCallback } from 'react';
 import { Layers, AlertTriangle, CheckCircle2, Monitor } from 'lucide-react';
+import { useModalA11y } from '../utils/useModalA11y';
 
 interface MapCompatibilityModalProps {
   isOpen: boolean;
@@ -11,10 +12,22 @@ interface MapCompatibilityModalProps {
 export const MapCompatibilityModal: React.FC<MapCompatibilityModalProps> = ({
   isOpen,
   onProceed3D,
-  onFallback2D
+  onFallback2D,
+  onClose
 }) => {
   const [hasWebGL, setHasWebGL] = useState<boolean>(true);
   const [dontShowAgain, setDontShowAgain] = useState<boolean>(false);
+  const dialogRef = useRef<HTMLDivElement>(null);
+
+  const handleDismiss = useCallback(() => {
+    if (onClose) {
+      onClose();
+    } else {
+      onFallback2D();
+    }
+  }, [onClose, onFallback2D]);
+
+  useModalA11y(isOpen, handleDismiss, dialogRef);
 
   useEffect(() => {
     if (typeof window === 'undefined') return;
@@ -56,6 +69,7 @@ export const MapCompatibilityModal: React.FC<MapCompatibilityModalProps> = ({
 
   return (
     <div
+      ref={dialogRef}
       role="dialog"
       aria-modal="true"
       aria-labelledby="compat-modal-title"

@@ -10,6 +10,7 @@ import {
 } from 'lucide-react';
 import { Scenario } from '../types';
 import { SimulationRunLogEntry } from '../models/localStorageStore';
+import { formatCostEstimate } from '../utils/currencyFormatter';
 import {
   runBaselineSimulation,
   runAlternativeSimulation,
@@ -266,7 +267,7 @@ export const HistoryInsightsView: React.FC<HistoryInsightsViewProps> = ({
 
           <div className="whatif-card p-4 rounded-2xl text-center space-y-1">
             <div className="text-xl sm:text-2xl font-extrabold font-mono text-white">
-              {bestResult?.costDataStatus === 'not-estimated' ? 'Not estimated' : `$${bestResult?.metrics.totalCostMillion.toFixed(2)}M`}
+              {bestResult?.costDataStatus === 'not-estimated' ? 'Not estimated' : formatCostEstimate(bestResult?.metrics.totalCostMillion ?? 0)}
             </div>
             <div className="text-xs text-slate-300 font-semibold">
               Estimated 5-Yr Lifecycle Cost

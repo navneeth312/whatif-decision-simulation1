@@ -547,7 +547,7 @@ export const DigitalTwinViewer2D: React.FC<DigitalTwinViewer2DProps> = ({
               aria-expanded={searchQuery.trim().length >= 2}
               aria-controls="map-2d-search-suggestions"
               placeholder="Search place, landmark, building…"
-              className="min-w-0 flex-1 bg-transparent text-[11px] text-white placeholder:text-slate-500 focus:outline-none"
+              className="min-w-0 flex-1 bg-transparent text-[11px] text-white placeholder:text-slate-400 focus:outline-none"
             />
             <span className="text-[9px] font-mono text-slate-400 shrink-0">
               {searchableLandmarks.length.toLocaleString()}

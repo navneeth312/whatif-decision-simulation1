@@ -4196,7 +4196,7 @@ return (
                   onChange={(e) => setAssetFilterQuery(e.target.value)}
                   placeholder="Filter asset..."
                   aria-label="Filter 3D twin components"
-                  className="w-20 sm:w-24 bg-transparent text-[11px] text-white placeholder-slate-500 focus:outline-none"
+                  className="w-20 sm:w-24 bg-transparent text-[11px] text-white placeholder-slate-400 focus:outline-none"
                 />
                 <select
                   aria-label="Inspect Network Component"
@@ -4263,9 +4263,9 @@ return (
                   aria-expanded={landmarkSearchQuery.trim().length >= 2}
                   aria-controls="map-landmark-suggestions"
                   placeholder="Search mapped places, landmarks, or buildings…"
-                  className="min-w-0 flex-1 bg-transparent text-[11px] text-white placeholder:text-slate-500 focus:outline-none"
+                  className="min-w-0 flex-1 bg-transparent text-[11px] text-white placeholder:text-slate-400 focus:outline-none"
                 />
-                <span className="shrink-0 text-[9px] text-slate-500">
+                <span className="shrink-0 text-[9px] text-slate-400">
                   {allNamedMapLandmarks.length.toLocaleString()}
                 </span>
               </div>
@@ -4452,10 +4452,10 @@ return (
                         }`}
                     >
                       <div className="flex items-center gap-2">
-                        <Icon className={`w-3.5 h-3.5 ${isChecked ? 'text-cyan-400' : 'text-slate-500'}`} />
+                        <Icon className={`w-3.5 h-3.5 ${isChecked ? 'text-cyan-400' : 'text-slate-400'}`} />
                         <div>
                           <div className="text-[11px] font-semibold">{item.label}</div>
-                          <div className="text-[9px] text-slate-500">{item.desc}</div>
+                          <div className="text-[9px] text-slate-400">{item.desc}</div>
                         </div>
                       </div>
                       <input

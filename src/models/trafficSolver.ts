@@ -7,9 +7,12 @@ export const TRAFFIC_MODEL_VERSION = 'v2.1.0-CTM-TriangularFD';
  * with a triangular fundamental diagram and explicit CFL stability verification.
  */
 export function solveTrafficNetwork(network: TrafficNetwork): TrafficSimulationResult {
-  const dtSec = Math.max(1, network.timeStepSeconds || 5);
+  const finiteOr = (val: unknown, fallback: number): number =>
+    typeof val === 'number' && Number.isFinite(val) ? val : fallback;
+
+  const dtSec = Math.max(1, finiteOr(network.timeStepSeconds, 5));
   const dtHours = dtSec / 3600;
-  const totalSteps = Math.max(5, network.totalSteps || 30);
+  const totalSteps = Math.max(5, Math.min(2000, Math.round(finiteOr(network.totalSteps, 30))));
   const cells = network.cells;
   const warnings: string[] = [];
 
@@ -28,11 +31,44 @@ export function solveTrafficNetwork(network: TrafficNetwork): TrafficSimulationR
     };
   }
 
+  // Normalize non-finite cell values cleanly without modifying valid calibration data
+  const safeCells = cells.map((cell) => {
+    const rawNums = [
+      cell.freeFlowSpeedKmh,
+      cell.backwardWaveSpeedKmh,
+      cell.jamDensityVehKmPerLane,
+      cell.lengthKm,
+      cell.lanes,
+      cell.initialDensityVehKmPerLane
+    ];
+    if (rawNums.some((n) => typeof n !== 'number' || !Number.isFinite(n))) {
+      warnings.push(`Cell '${cell.id}' contained non-finite input(s); safe fallback bounds applied.`);
+    }
+    const jamDensity = Math.max(20, finiteOr(cell.jamDensityVehKmPerLane, 120));
+    return {
+      ...cell,
+      freeFlowSpeedKmh: Math.max(10, finiteOr(cell.freeFlowSpeedKmh, 50)),
+      backwardWaveSpeedKmh: Math.max(5, finiteOr(cell.backwardWaveSpeedKmh, 18)),
+      jamDensityVehKmPerLane: jamDensity,
+      lengthKm: Math.max(0.02, finiteOr(cell.lengthKm, 0.25)),
+      lanes: Math.max(1, Math.round(finiteOr(cell.lanes, 2))),
+      initialDensityVehKmPerLane: Math.min(jamDensity, Math.max(0, finiteOr(cell.initialDensityVehKmPerLane, 20))),
+      inflowDemandVehHour:
+        cell.inflowDemandVehHour !== undefined
+          ? Math.max(0, finiteOr(cell.inflowDemandVehHour, 0))
+          : undefined,
+      signalGreenRatio:
+        cell.signalGreenRatio !== undefined
+          ? finiteOr(cell.signalGreenRatio, 0.5)
+          : undefined
+    };
+  });
+
   // Check CFL condition for every cell: Δt ≤ Δx / max(v_f, w)
   let cflSatisfied = true;
   let maxCflRatio = 0;
 
-  for (const cell of cells) {
+  for (const cell of safeCells) {
     const vf = Math.max(10, cell.freeFlowSpeedKmh);
     const w = Math.max(5, cell.backwardWaveSpeedKmh);
     const dx = Math.max(0.02, cell.lengthKm);
@@ -54,12 +90,12 @@ export function solveTrafficNetwork(network: TrafficNetwork): TrafficSimulationR
   }
 
   // Map cells
-  const cellMap = new Map<string, (typeof cells)[0]>();
-  cells.forEach((c) => cellMap.set(c.id, c));
+  const cellMap = new Map<string, (typeof safeCells)[0]>();
+  safeCells.forEach((c) => cellMap.set(c.id, c));
 
   // State: density k_i (veh/km/lane) and vehicle count N_i = k_i * length * lanes
   const currentDensity: Record<string, number> = {};
-  for (const cell of cells) {
+  for (const cell of safeCells) {
     const kj = Math.max(20, cell.jamDensityVehKmPerLane);
     currentDensity[cell.id] = Math.min(kj, Math.max(0, cell.initialDensityVehKmPerLane));
   }
@@ -79,7 +115,7 @@ export function solveTrafficNetwork(network: TrafficNetwork): TrafficSimulationR
     const sending: Record<string, number> = {};
     const receiving: Record<string, number> = {};
 
-    for (const cell of cells) {
+    for (const cell of safeCells) {
       const vf = cell.freeFlowSpeedKmh;
       const w = cell.backwardWaveSpeedKmh;
       const kj = cell.jamDensityVehKmPerLane;
@@ -88,7 +124,6 @@ export function solveTrafficNetwork(network: TrafficNetwork): TrafficSimulationR
 
       // q_max per lane = v_f * w * k_j / (v_f + w)
       const qMaxPerLane = (vf * w * kj) / (vf + w);
-      const qMaxTotal = lanes * qMaxPerLane;
 
       // Sending function S_i
       const s = lanes * Math.min(vf * k, qMaxPerLane);
@@ -105,12 +140,12 @@ export function solveTrafficNetwork(network: TrafficNetwork): TrafficSimulationR
     const totalOutflow: Record<string, number> = {};
     const totalInflow: Record<string, number> = {};
 
-    cells.forEach((c) => {
+    safeCells.forEach((c) => {
       totalOutflow[c.id] = 0;
       totalInflow[c.id] = 0;
     });
 
-    for (const cell of cells) {
+    for (const cell of safeCells) {
       const downstreamIds = cell.nextCellIds;
       if (!downstreamIds || downstreamIds.length === 0) {
         // Exit cell: freely discharges according to sending capacity
@@ -120,7 +155,7 @@ export function solveTrafficNetwork(network: TrafficNetwork): TrafficSimulationR
       }
 
       // Signal green ratio at end of cell (0..1)
-      const greenRatio = cell.signalGreenRatio ?? 1.0;
+      const greenRatio = Math.max(0, Math.min(1, cell.signalGreenRatio ?? 1.0));
       const splitFraction = 1.0 / downstreamIds.length;
 
       for (const nextId of downstreamIds) {
@@ -149,7 +184,7 @@ export function solveTrafficNetwork(network: TrafficNetwork): TrafficSimulationR
     }
 
     // External demand inflow at boundary cells
-    for (const cell of cells) {
+    for (const cell of safeCells) {
       if (cell.inflowDemandVehHour && cell.inflowDemandVehHour > 0) {
         // Inflow limited by cell receiving capacity
         const actualInflow = Math.min(cell.inflowDemandVehHour, receiving[cell.id]);
@@ -166,7 +201,7 @@ export function solveTrafficNetwork(network: TrafficNetwork): TrafficSimulationR
     let stepTotalVehicles = 0;
     const stepBottlenecks: string[] = [];
 
-    for (const cell of cells) {
+    for (const cell of safeCells) {
       const lengthKm = cell.lengthKm;
       const lanes = Math.max(1, cell.lanes);
       const prevK = currentDensity[cell.id];

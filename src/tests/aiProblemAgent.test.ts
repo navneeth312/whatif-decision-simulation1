@@ -7,6 +7,7 @@ import {
   getAIAllowedParameters,
   validateAIProblemDraft
 } from '../models/aiProblemAgent';
+import { cleanContext } from '../server/agentApp';
 import {
   explainMyDecision,
   normalizeAndRankAlternatives,
@@ -106,5 +107,17 @@ describe('WhatIf AI scenario draft validation and solver handoff', () => {
     const invalidValue = structuredClone(validResponse);
     invalidValue.alternatives[0].modifications[0].newValue = 999;
     assert.throws(() => validateAIProblemDraft(invalidValue, traffic), /out-of-range/);
+  });
+
+  it('validates cleanContext compatibility across traffic, water, and energy domains', () => {
+    for (const domain of ['traffic', 'water', 'energy'] as const) {
+      const scenario = DEFAULT_SCENARIOS.find((s) => s.domain === domain)!;
+      const context = buildAIProblemContext(scenario);
+      const cleaned = cleanContext(context, domain);
+      assert.equal(cleaned.parameters.length, context.parameters.length);
+      if (domain === 'water') {
+        assert.ok(cleaned.parameters.some((p) => p.property === 'absoluteRoughnessMm'));
+      }
+    }
   });
 });

@@ -32,8 +32,10 @@ interface AssistantMessage {
 
 const SUGGESTED_QUESTIONS = [
   'What is happening now?',
+  'What is causing this bottleneck?',
   'Which solution passes the limits?',
-  'What could happen later?'
+  'What could go wrong?',
+  'What should we do next?'
 ];
 
 export const OfflineProblemAssistant: React.FC<OfflineProblemAssistantProps> = (props) => {
@@ -165,7 +167,7 @@ export const OfflineProblemAssistant: React.FC<OfflineProblemAssistantProps> = (
             maxLength={500}
             rows={2}
             placeholder="Ask about this problem…"
-            className="min-h-10 flex-1 resize-y rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-xs text-white placeholder:text-slate-500 focus:border-cyan-400/60 focus:outline-none focus:ring-2 focus:ring-cyan-500/15"
+            className="min-h-10 flex-1 resize-y rounded-xl border border-slate-700 bg-slate-950 px-3 py-2 text-xs text-white placeholder:text-slate-400 focus:border-cyan-400/60 focus:outline-none focus:ring-2 focus:ring-cyan-500/15"
           />
           <button
             type="submit"
@@ -177,7 +179,7 @@ export const OfflineProblemAssistant: React.FC<OfflineProblemAssistantProps> = (
             Ask
           </button>
         </form>
-        <p className="flex items-center gap-1.5 text-[9px] text-slate-500">
+        <p className="flex items-center gap-1.5 text-[10px] text-slate-400">
           <MessageCircle className="h-3 w-3" aria-hidden="true" />
           Offline guide, not a generative AI model. It does not make up unmodeled results.
         </p>

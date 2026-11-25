@@ -1,4 +1,5 @@
-import React, { useEffect, useState } from 'react';
+import React, { useRef, useState } from 'react';
+import { useModalA11y } from '../utils/useModalA11y';
 import { X, Download, Upload, AlertTriangle, CheckCircle2, ShieldCheck, Copy, Check } from 'lucide-react';
 import { Scenario } from '../types';
 import {
@@ -22,14 +23,8 @@ export const ImportExportModal: React.FC<ImportExportModalProps> = ({
   const [importJsonText, setImportJsonText] = useState('');
   const [validationError, setValidationError] = useState<string | null>(null);
   const [copied, setCopied] = useState(false);
-
-  useEffect(() => {
-    const onKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose();
-    };
-    window.addEventListener('keydown', onKeyDown);
-    return () => window.removeEventListener('keydown', onKeyDown);
-  }, [onClose]);
+  const dialogRef = useRef<HTMLDivElement>(null);
+  useModalA11y(true, onClose, dialogRef);
 
   // Generate exported JSON
   const exportedJson = JSON.stringify(scenario, null, 2);
@@ -143,6 +138,7 @@ export const ImportExportModal: React.FC<ImportExportModalProps> = ({
 
   return (
     <div
+      ref={dialogRef}
       role="dialog"
       aria-modal="true"
       aria-label="Import and Export Scenarios"
@@ -174,33 +170,42 @@ export const ImportExportModal: React.FC<ImportExportModalProps> = ({
         </div>
 
         {/* Tab Navigation */}
-        <div className="px-6 py-2.5 bg-slate-950/80 border-b border-slate-800 flex items-center gap-2">
+        <div role="tablist" aria-label="Import and Export options" className="px-6 py-2.5 bg-slate-950/80 border-b border-slate-800 flex items-center gap-2">
           <button
+            type="button"
+            role="tab"
+            aria-selected={activeTab === 'export-json'}
             onClick={() => setActiveTab('export-json')}
-            className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition ${
+            className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition cursor-pointer ${
               activeTab === 'export-json'
                 ? 'bg-indigo-600 text-white shadow'
-                : 'text-slate-400 hover:text-slate-200'
+                : 'text-slate-300 hover:text-white'
             }`}
           >
             Export JSON
           </button>
           <button
+            type="button"
+            role="tab"
+            aria-selected={activeTab === 'export-csv'}
             onClick={() => setActiveTab('export-csv')}
-            className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition ${
+            className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition cursor-pointer ${
               activeTab === 'export-csv'
                 ? 'bg-indigo-600 text-white shadow'
-                : 'text-slate-400 hover:text-slate-200'
+                : 'text-slate-300 hover:text-white'
             }`}
           >
             Export CSV
           </button>
           <button
+            type="button"
+            role="tab"
+            aria-selected={activeTab === 'import-json'}
             onClick={() => setActiveTab('import-json')}
-            className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition ${
+            className={`px-3 py-1.5 rounded-xl text-xs font-semibold transition cursor-pointer ${
               activeTab === 'import-json'
                 ? 'bg-indigo-600 text-white shadow'
-                : 'text-slate-400 hover:text-slate-200'
+                : 'text-slate-300 hover:text-white'
             }`}
           >
             Import JSON
@@ -267,7 +272,7 @@ export const ImportExportModal: React.FC<ImportExportModalProps> = ({
           {activeTab === 'import-json' && (
             <div className="space-y-3">
               <div className="flex items-center justify-between">
-                <label className="text-xs font-bold uppercase tracking-wider text-slate-400">
+                <label htmlFor="import-json-textarea" className="text-xs font-bold uppercase tracking-wider text-slate-400">
                   Paste JSON Scenario or Upload File
                 </label>
                 <label className="cursor-pointer px-3 py-1 rounded-xl bg-slate-800 hover:bg-slate-700 text-xs font-semibold text-slate-300 flex items-center gap-1.5 transition">
@@ -277,12 +282,15 @@ export const ImportExportModal: React.FC<ImportExportModalProps> = ({
                     type="file"
                     accept=".json"
                     onChange={handleFileUpload}
-                    className="hidden"
+                    aria-label="Upload scenario JSON file"
+                    className="sr-only"
                   />
                 </label>
               </div>
 
               <textarea
+                id="import-json-textarea"
+                aria-label="Paste Scenario JSON"
                 value={importJsonText}
                 onChange={(e) => {
                   setImportJsonText(e.target.value);
@@ -294,7 +302,7 @@ export const ImportExportModal: React.FC<ImportExportModalProps> = ({
               />
 
               {validationError && (
-                <div className="p-3 rounded-xl bg-rose-950/50 border border-rose-500/50 text-rose-300 text-xs flex items-center gap-2">
+                <div role="alert" className="p-3 rounded-xl bg-rose-950/50 border border-rose-500/50 text-rose-300 text-xs flex items-center gap-2">
                   <AlertTriangle className="w-4 h-4 shrink-0" />
                   <span>{validationError}</span>
                 </div>
@@ -302,8 +310,9 @@ export const ImportExportModal: React.FC<ImportExportModalProps> = ({
 
               <div className="flex justify-end pt-2">
                 <button
+                  type="button"
                   onClick={handleImport}
-                  className="px-5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-xs font-bold text-white flex items-center gap-1.5 transition shadow"
+                  className="px-5 py-2 rounded-xl bg-emerald-600 hover:bg-emerald-500 text-xs font-bold text-white flex items-center gap-1.5 transition shadow cursor-pointer"
                 >
                   <CheckCircle2 className="w-4 h-4" />
                   <span>Validate & Import Scenario</span>
@@ -314,12 +323,12 @@ export const ImportExportModal: React.FC<ImportExportModalProps> = ({
         </div>
 
         {/* Footer with mandatory disclosure */}
-        <div className="px-6 py-3 border-t border-slate-800/80 bg-slate-950/90 flex items-center justify-between text-[11px] text-slate-500">
+        <div className="px-6 py-3 border-t border-slate-800/80 bg-slate-950/90 flex items-center justify-between text-[11px] text-slate-400">
           <span className="flex items-center gap-1.5">
             <span className="w-1.5 h-1.5 rounded-full bg-cyan-400" />
             Single-device demo · browser storage only · no cloud sync
           </span>
-          <span className="text-[10px] text-slate-600">
+          <span className="text-[10px] text-slate-400">
             Exported data contains only user-configured parameters & calculated outputs
           </span>
         </div>

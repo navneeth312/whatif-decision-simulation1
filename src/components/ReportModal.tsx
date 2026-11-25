@@ -1,7 +1,9 @@
-import React, { useEffect } from 'react';
+import React, { useRef } from 'react';
 import { X, Printer, ShieldCheck, AlertTriangle, Ban } from 'lucide-react';
 import { Scenario } from '../types';
 import { runAlternativeSimulation, normalizeAndRankAlternatives } from '../models/decisionEngines';
+import { formatCostEstimate } from '../utils/currencyFormatter';
+import { useModalA11y } from '../utils/useModalA11y';
 
 interface ReportModalProps {
   scenario: Scenario;
@@ -9,13 +11,8 @@ interface ReportModalProps {
 }
 
 export const ReportModal: React.FC<ReportModalProps> = ({ scenario, onClose }) => {
-  useEffect(() => {
-    const onKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') onClose();
-    };
-    window.addEventListener('keydown', onKeyDown);
-    return () => window.removeEventListener('keydown', onKeyDown);
-  }, [onClose]);
+  const dialogRef = useRef<HTMLDivElement>(null);
+  useModalA11y(true, onClose, dialogRef);
 
   const rawRuns = scenario.alternatives.map((alt) => runAlternativeSimulation(scenario, alt));
   const rankedUnsorted = normalizeAndRankAlternatives(scenario, rawRuns);
@@ -39,6 +36,7 @@ export const ReportModal: React.FC<ReportModalProps> = ({ scenario, onClose }) =
 
   return (
     <div
+      ref={dialogRef}
       role="dialog"
       aria-modal="true"
       aria-label="Simulation Decision Report"
@@ -172,7 +170,7 @@ export const ReportModal: React.FC<ReportModalProps> = ({ scenario, onClose }) =
                         {alt.metrics.primaryPerformance.toFixed(1)} {alt.metrics.primaryPerformanceUnit}
                       </td>
                       <td className="p-3 font-mono text-purple-300">
-                        {alt.costDataStatus === 'not-estimated' ? 'Not estimated' : `$${alt.metrics.totalCostMillion.toFixed(1)}M`}
+                        {alt.costDataStatus === 'not-estimated' ? 'Not estimated' : formatCostEstimate(alt.metrics.totalCostMillion)}
                       </td>
                       <td className="p-3 font-bold text-white">
                         {alt.normalizedScores.overallUtility}/100

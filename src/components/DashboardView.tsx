@@ -18,7 +18,8 @@ interface DashboardViewProps {
 
 export const DashboardView: React.FC<DashboardViewProps> = ({
   onOpenSimulation,
-  onOpenMap
+  onOpenMap,
+  onSelectProblem
 }) => {
   return (
     <div className="flex-1 overflow-y-auto p-4 sm:p-6 lg:p-8 flex flex-col justify-between whatif-canvas-bg text-slate-100 max-w-5xl mx-auto w-full min-h-[calc(100vh-4rem)]">
@@ -121,25 +122,53 @@ export const DashboardView: React.FC<DashboardViewProps> = ({
               </p>
             </div>
 
-            <button
-              type="button"
-              onClick={onOpenSimulation}
-              className="w-full py-3.5 px-5 rounded-2xl bg-gradient-to-r from-cyan-500 to-indigo-600 hover:from-cyan-400 hover:to-indigo-500 text-slate-950 font-extrabold text-xs sm:text-sm flex items-center justify-center gap-2 transition cursor-pointer shadow-lg shadow-indigo-600/25"
-            >
-              <span>Start Simulation</span>
-              <ArrowRight className="w-4 h-4 text-slate-950 group-hover:translate-x-0.5 transition" />
-            </button>
+            <div className="space-y-2.5">
+              {onSelectProblem && (
+                <div className="grid grid-cols-3 gap-1.5" role="group" aria-label="Quick start by sector">
+                  <button
+                    type="button"
+                    onClick={() => onSelectProblem('traffic')}
+                    className="py-1.5 px-2 rounded-xl bg-slate-950/75 hover:bg-slate-800 border border-slate-700/80 text-[11px] font-semibold text-cyan-200 transition cursor-pointer"
+                  >
+                    Road Traffic
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => onSelectProblem('water')}
+                    className="py-1.5 px-2 rounded-xl bg-slate-950/75 hover:bg-slate-800 border border-slate-700/80 text-[11px] font-semibold text-indigo-200 transition cursor-pointer"
+                  >
+                    Water Network
+                  </button>
+                  <button
+                    type="button"
+                    onClick={() => onSelectProblem('energy')}
+                    className="py-1.5 px-2 rounded-xl bg-slate-950/75 hover:bg-slate-800 border border-slate-700/80 text-[11px] font-semibold text-amber-200 transition cursor-pointer"
+                  >
+                    Power Grid
+                  </button>
+                </div>
+              )}
+
+              <button
+                type="button"
+                onClick={onOpenSimulation}
+                className="w-full py-3.5 px-5 rounded-2xl bg-gradient-to-r from-cyan-500 to-indigo-600 hover:from-cyan-400 hover:to-indigo-500 text-slate-950 font-extrabold text-xs sm:text-sm flex items-center justify-center gap-2 transition cursor-pointer shadow-lg shadow-indigo-600/25"
+              >
+                <span>Start Simulation</span>
+                <ArrowRight className="w-4 h-4 text-slate-950 group-hover:translate-x-0.5 transition" />
+              </button>
+            </div>
           </div>
         </div>
       </div>
 
       {/* Simple Professional Disclaimer Footer */}
-      <footer className="pt-6 border-t border-slate-800/80 text-[11px] text-slate-500 flex flex-col sm:flex-row items-center justify-between gap-3 text-center sm:text-left">
+      <footer className="pt-6 border-t border-slate-800/80 text-[11px] text-slate-400 flex flex-col sm:flex-row items-center justify-between gap-3 text-center sm:text-left">
         <p className="flex items-center gap-1.5 justify-center sm:justify-start">
           <ShieldCheck className="w-3.5 h-3.5 text-slate-400 shrink-0" />
           <span>Real-world infrastructure work should be checked by qualified professionals before implementation.</span>
         </p>
-        <span className="text-slate-600 font-medium">WhatIf Decision Support</span>
+        <span className="text-slate-400 font-medium">WhatIf Decision Support</span>
       </footer>
     </div>
   );

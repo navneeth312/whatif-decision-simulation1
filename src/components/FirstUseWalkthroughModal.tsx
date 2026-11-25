@@ -1,4 +1,5 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useRef, useCallback } from 'react';
+import { useModalA11y } from '../utils/useModalA11y';
 import {
   X,
   ArrowRight,
@@ -209,21 +210,17 @@ export const FirstUseWalkthroughModal: React.FC<FirstUseWalkthroughModalProps> =
   reducedMotion = false
 }) => {
   const [currentStepIndex, setCurrentStepIndex] = useState(0);
+  const dialogRef = useRef<HTMLDivElement>(null);
 
-  useEffect(() => {
-    if (!isOpen) return;
-    const handleKeyDown = (e: KeyboardEvent) => {
-      if (e.key === 'Escape') {
-        onClose();
-      } else if (e.key === 'ArrowRight') {
-        setCurrentStepIndex((prev) => Math.min(WALKTHROUGH_STEPS.length - 1, prev + 1));
-      } else if (e.key === 'ArrowLeft') {
-        setCurrentStepIndex((prev) => Math.max(0, prev - 1));
-      }
-    };
-    window.addEventListener('keydown', handleKeyDown);
-    return () => window.removeEventListener('keydown', handleKeyDown);
-  }, [isOpen, onClose]);
+  const handleWalkthroughKey = useCallback((e: KeyboardEvent) => {
+    if (e.key === 'ArrowRight') {
+      setCurrentStepIndex((prev) => Math.min(WALKTHROUGH_STEPS.length - 1, prev + 1));
+    } else if (e.key === 'ArrowLeft') {
+      setCurrentStepIndex((prev) => Math.max(0, prev - 1));
+    }
+  }, []);
+
+  useModalA11y(isOpen, onClose, dialogRef, handleWalkthroughKey);
 
   if (!isOpen) return null;
 
@@ -240,6 +237,7 @@ export const FirstUseWalkthroughModal: React.FC<FirstUseWalkthroughModalProps> =
 
   return (
     <div
+      ref={dialogRef}
       role="dialog"
       aria-modal="true"
       aria-labelledby="walkthrough-title"
@@ -302,7 +300,7 @@ export const FirstUseWalkthroughModal: React.FC<FirstUseWalkthroughModalProps> =
                 <Sparkles className="w-4 h-4 text-cyan-400" />
                 <span>On the Interface: {currentStep.interfaceCallout.targetElement}</span>
               </span>
-              <span className="text-[10px] text-slate-500">Live Element</span>
+              <span className="text-[10px] text-slate-400">Live Element</span>
             </div>
             <p className="text-xs text-slate-300 leading-relaxed">
               {currentStep.interfaceCallout.actionExplanation}

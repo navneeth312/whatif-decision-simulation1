@@ -73,4 +73,18 @@ describe('offline WhatIf problem assistant', () => {
     assert.ok(answer.includes('not calculated'));
     assert.ok(answer.includes('will not invent a numerical answer'));
   });
+
+  it('answers cause/bottleneck, risk/trade-off, and next-step/cost questions deterministically', () => {
+    const causeAnswer = answerOfflineProblemQuestion('What is causing this bottleneck?', context);
+    assert.ok(causeAnswer.includes('Solver-observed bottleneck mechanisms'));
+    assert.ok(causeAnswer.includes('Baseline threshold diagnostics'));
+
+    const riskAnswer = answerOfflineProblemQuestion('What could go wrong?', context);
+    assert.ok(riskAnswer.includes('Risks, trade-offs, and safeguards'));
+    assert.ok(riskAnswer.includes('Model constraint check:'));
+
+    const nextStepsAnswer = answerOfflineProblemQuestion('What should we do next and what does it cost?', context);
+    assert.ok(nextStepsAnswer.includes('Practical next steps & planning estimate'));
+    assert.ok(nextStepsAnswer.includes('Budget & timeline:'));
+  });
 });

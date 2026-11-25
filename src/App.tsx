@@ -355,6 +355,12 @@ export default function App() {
 
   return (
     <div className={`h-screen w-screen overflow-hidden flex flex-col bg-slate-950 text-slate-100 font-sans antialiased ${reducedMotion ? 'reduced-motion' : ''}`}>
+      <a
+        href="#main-content"
+        className="sr-only focus:not-sr-only focus:fixed focus:top-3 focus:left-3 focus:z-[100] focus:px-4 focus:py-2 focus:rounded-xl focus:bg-cyan-400 focus:text-slate-950 focus:font-extrabold focus:text-xs focus:shadow-2xl"
+      >
+        Skip to main content
+      </a>
       {/* If Landing view is selected */}
       {activeTab === 'landing' ? (
         <div className="h-full flex flex-col">
@@ -387,10 +393,12 @@ export default function App() {
             </div>
           </header>
 
-          <LandingView
-            onGetStarted={() => setActiveTab('dashboard')}
-            onExploreScenario={handleExploreScenarioDomain}
-          />
+          <main id="main-content" tabIndex={-1} className="flex-1 flex flex-col overflow-hidden focus:outline-none">
+            <LandingView
+              onGetStarted={() => setActiveTab('dashboard')}
+              onExploreScenario={handleExploreScenarioDomain}
+            />
+          </main>
         </div>
       ) : (
         /* Operational Command Center Layout matching reference */
@@ -429,7 +437,7 @@ export default function App() {
             />
 
             {/* Dynamic View Panel */}
-            <main className="flex-1 overflow-hidden flex flex-col pb-14 md:pb-0">
+            <main id="main-content" tabIndex={-1} className="flex-1 overflow-hidden flex flex-col pb-14 md:pb-0 focus:outline-none">
               {activeTab === 'dashboard' && (
                 <DashboardView
                   scenarios={scenarios}
@@ -538,6 +546,7 @@ export default function App() {
               <button
                 type="button"
                 onClick={() => setActiveTab('dashboard')}
+                aria-current={activeTab === 'dashboard' ? 'page' : undefined}
                 className={`flex flex-col items-center justify-center p-1 text-[10px] font-semibold cursor-pointer ${
                   activeTab === 'dashboard' ? 'text-cyan-400' : 'text-slate-400'
                 }`}
@@ -554,6 +563,7 @@ export default function App() {
               <button
                 type="button"
                 onClick={() => setActiveTab('simulation')}
+                aria-current={activeTab === 'simulation' ? 'page' : undefined}
                 className={`flex flex-col items-center justify-center p-1 text-[10px] font-semibold cursor-pointer ${
                   activeTab === 'simulation' ? 'text-cyan-400' : 'text-slate-400'
                 }`}
@@ -563,6 +573,7 @@ export default function App() {
               <button
                 type="button"
                 onClick={() => setActiveTab('map')}
+                aria-current={activeTab === 'map' ? 'page' : undefined}
                 className={`flex flex-col items-center justify-center p-1 text-[10px] font-semibold cursor-pointer ${
                   activeTab === 'map' ? 'text-cyan-400' : 'text-slate-400'
                 }`}
@@ -572,6 +583,7 @@ export default function App() {
               <button
                 type="button"
                 onClick={() => setActiveTab('compare')}
+                aria-current={activeTab === 'compare' ? 'page' : undefined}
                 className={`flex flex-col items-center justify-center p-1 text-[10px] font-semibold cursor-pointer ${
                   activeTab === 'compare' ? 'text-cyan-400' : 'text-slate-400'
                 }`}
@@ -581,6 +593,7 @@ export default function App() {
               <button
                 type="button"
                 onClick={() => setActiveTab('history')}
+                aria-current={activeTab === 'history' ? 'page' : undefined}
                 className={`flex flex-col items-center justify-center p-1 text-[10px] font-semibold cursor-pointer ${
                   activeTab === 'history' ? 'text-cyan-400' : 'text-slate-400'
                 }`}

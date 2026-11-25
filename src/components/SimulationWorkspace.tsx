@@ -68,6 +68,7 @@ import {
   checkDomainEligibility,
   getDomainCoverageExplanation
 } from '../models/domainEligibility';
+import { assessWaterPressureSummary } from '../utils/waterPressureSummary';
 import { PickedGeographicFeature } from '../models/geographicFeaturePicker';
 import { ChangeNavigatorBar } from './ChangeNavigatorBar';
 import { ComparisonSummaryBar } from './ComparisonSummaryBar';
@@ -1061,17 +1062,13 @@ export const SimulationWorkspace: React.FC<SimulationWorkspaceProps> = ({
 
     // 3. What May Improve
     let whatMayImprove = '';
+    let waterOverpressureNote: string | null = null;
     if (alt) {
       const delta = currentDeltas;
       if (domain === 'water') {
-        const rawRes = currentResult.rawOutput.result as any;
-        const maxP = rawRes?.nodeResults ? Math.max(...Object.values(rawRes.nodeResults).map((n: any) => n.pressureKPa)) : 0;
-        const maxExceeded = maxP > 550;
-        if (maxExceeded) {
-          whatMayImprove = `Water pressure improves significantly in low-pressure neighborhoods (+${delta.primaryImprovementPct}% improvement over baseline). However, pressure in some pipes exceeds configured limits. This solution requires additional pressure-reducing valves to be safe.`;
-        } else {
-          whatMayImprove = `Water pressure improves by +${delta.primaryImprovementPct}% over baseline across target neighborhoods. Pipe pressures remain within safe operating limits.`;
-        }
+        const waterAssessment = assessWaterPressureSummary(currentResult.rawOutput, delta.primaryImprovementPct);
+        whatMayImprove = waterAssessment.whatMayImprove;
+        waterOverpressureNote = waterAssessment.overpressureRiskNote;
       } else {
         whatMayImprove = `${delta.primaryLabel} improves by +${delta.primaryImprovementPct}% over baseline. ${currentResult.feasible ? 'Meets all configured required conditions.' : 'Alleviates the main congestion bottleneck.'}`;
       }
@@ -1083,8 +1080,8 @@ export const SimulationWorkspace: React.FC<SimulationWorkspaceProps> = ({
     const immediateTradeOff = alternativeTradeOffs.immediateTradeOffs[0]?.detail || 'Localized flow adjustments during project commissioning.';
     const secondaryRisk = alternativeTradeOffs.secondaryConsequences[0]?.detail || 'Potential downstream volume shift.';
     let whatElseCouldHappen = `${immediateTradeOff} Secondary effect: ${secondaryRisk}`;
-    if (domain === 'water') {
-      whatElseCouldHappen += ' Operational risk: Downstream pipe pressure exceeds safe limits without pressure-reducing valves, which could lead to joint leaks or pipe fatigue if left unaddressed.';
+    if (waterOverpressureNote) {
+      whatElseCouldHappen += ` ${waterOverpressureNote}`;
     }
 
     // 5. What to Do Next
@@ -2088,14 +2085,13 @@ export const SimulationWorkspace: React.FC<SimulationWorkspaceProps> = ({
     return (
       <div
         key={alt.id}
-        className={`p-5 rounded-2xl border transition flex flex-col justify-between space-y-4 cursor-pointer ${
+        className={`p-5 rounded-2xl border transition flex flex-col justify-between space-y-4 ${
           isSelected
             ? 'bg-indigo-950/80 border-cyan-400 text-white ring-2 ring-cyan-400/50 shadow-xl'
             : isRecommendedHighlight
               ? 'bg-slate-900/90 border-indigo-500/50 text-slate-200 hover:border-indigo-400'
               : 'bg-slate-950/80 border-slate-800 text-slate-300 hover:border-slate-700'
         }`}
-        onClick={() => handleChooseAlt(alt.id)}
       >
         <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-800/80 pb-3">
           <div className="flex items-center gap-2">
@@ -2214,10 +2210,8 @@ export const SimulationWorkspace: React.FC<SimulationWorkspaceProps> = ({
 
         <button
           type="button"
-          onClick={(e) => {
-            e.stopPropagation();
-            handleChooseAlt(alt.id);
-          }}
+          onClick={() => handleChooseAlt(alt.id)}
+          aria-pressed={isSelected}
           className={`w-full py-2.5 px-4 rounded-xl font-bold text-xs flex items-center justify-center gap-2 transition cursor-pointer ${
             isSelected
               ? 'bg-cyan-500 text-slate-950 shadow-md shadow-cyan-500/25'
@@ -2236,12 +2230,11 @@ export const SimulationWorkspace: React.FC<SimulationWorkspaceProps> = ({
 
     return (
       <div
-        className={`p-5 rounded-2xl border transition flex flex-col justify-between space-y-4 cursor-pointer ${
+        className={`p-5 rounded-2xl border transition flex flex-col justify-between space-y-4 ${
           isSelected
             ? 'bg-indigo-950/80 border-cyan-400 text-white ring-2 ring-cyan-400/50 shadow-xl'
             : 'bg-slate-950/80 border-slate-800 text-slate-300 hover:border-slate-700'
         }`}
-        onClick={() => handleChooseAlt(null)}
       >
         <div className="flex flex-wrap items-center justify-between gap-2 border-b border-slate-800/80 pb-3">
           <div className="flex items-center gap-2">
@@ -2333,10 +2326,8 @@ export const SimulationWorkspace: React.FC<SimulationWorkspaceProps> = ({
 
         <button
           type="button"
-          onClick={(e) => {
-            e.stopPropagation();
-            handleChooseAlt(null);
-          }}
+          onClick={() => handleChooseAlt(null)}
+          aria-pressed={isSelected}
           className={`w-full py-2.5 px-4 rounded-xl font-bold text-xs flex items-center justify-center gap-2 transition cursor-pointer ${
             isSelected
               ? 'bg-cyan-500 text-slate-950 shadow-md shadow-cyan-500/25'
@@ -2352,6 +2343,9 @@ export const SimulationWorkspace: React.FC<SimulationWorkspaceProps> = ({
 
   return (
     <div className="flex-1 overflow-y-auto p-3 sm:p-5 lg:p-6 flex flex-col gap-5 whatif-canvas-bg text-slate-100 max-w-7xl mx-auto w-full">
+      <div role="status" aria-live="polite" className="sr-only">
+        {`Step ${getSimpleStepNumber(activeStage)} of 7: ${STAGES[activeStage - 1]?.title || ''}. Study area: ${activeMapPlace.label}. Selected option: ${selectedAlternative ? `Option ${selectedAlternative.tag} ${selectedAlternative.name}` : 'Baseline'}.`}
+      </div>
       {/* TOP HEADER: Breadcrumbs & Mode Switcher */}
       <header className="flex flex-col md:flex-row md:items-center justify-between gap-3 border-b border-slate-800/80 pb-4">
         <div>
@@ -2509,6 +2503,7 @@ export const SimulationWorkspace: React.FC<SimulationWorkspaceProps> = ({
                   key={st.num}
                   type="button"
                   onClick={() => handleSelectSimpleStep(st.num)}
+                  aria-current={isCurrent ? 'step' : undefined}
                   className={`p-2.5 rounded-xl text-left border transition cursor-pointer flex items-center gap-2 ${isCurrent
                     ? 'bg-indigo-600 border-indigo-400 text-white shadow-lg shadow-indigo-600/30'
                     : isPast
@@ -2560,6 +2555,7 @@ export const SimulationWorkspace: React.FC<SimulationWorkspaceProps> = ({
                   key={stg.id}
                   type="button"
                   onClick={() => setActiveStage(stg.id)}
+                  aria-current={isActive ? 'step' : undefined}
                   className={`px-2.5 py-1.5 rounded-xl text-left transition flex items-center gap-1.5 cursor-pointer text-xs ${isActive
                     ? 'bg-indigo-600 text-white font-bold shadow-md shadow-indigo-600/30 ring-1 ring-indigo-400'
                     : isCompleted
@@ -2728,13 +2724,14 @@ export const SimulationWorkspace: React.FC<SimulationWorkspaceProps> = ({
                     <>
                       {/* Problem Filter Bar */}
                       <div className="relative">
-                        <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" />
+                        <Search className="w-4 h-4 text-slate-400 absolute left-3.5 top-1/2 -translate-y-1/2" aria-hidden="true" />
                         <input
                           type="text"
                           value={problemSearch}
                           onChange={(e) => setProblemSearch(e.target.value)}
+                          aria-label={`Search ${domainProblems.length} ${scenario.domain} problem statements`}
                           placeholder={`Search ${domainProblems.length} ${scenario.domain} problem statements...`}
-                          className="w-full pl-10 pr-4 py-2 rounded-xl bg-slate-900 border border-slate-800 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-cyan-400"
+                          className="w-full pl-10 pr-4 py-2 rounded-xl bg-slate-900 border border-slate-800 text-xs text-white placeholder-slate-400 focus:outline-none focus:border-cyan-400"
                         />
                       </div>
 
@@ -2810,10 +2807,11 @@ export const SimulationWorkspace: React.FC<SimulationWorkspaceProps> = ({
 
                       <div className="space-y-3">
                         <div className="space-y-1.5">
-                          <label className="text-xs font-bold text-slate-200">
+                          <label htmlFor="custom-problem-what" className="text-xs font-bold text-slate-200">
                             1. What is happening? <span className="text-rose-400">*</span>
                           </label>
                           <input
+                            id="custom-problem-what"
                             type="text"
                             value={customProblemWhat}
                             onChange={(e) => setCustomProblemWhat(e.target.value)}
@@ -2822,33 +2820,35 @@ export const SimulationWorkspace: React.FC<SimulationWorkspaceProps> = ({
                               : scenario.domain === 'water'
                                 ? 'e.g., Water pressure drops severely in high-elevation residential zones'
                                 : 'e.g., Frequent voltage dips and feeder trips during summer evening peak'}
-                            className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-800 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-cyan-400"
+                            className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-800 text-xs text-white placeholder-slate-400 focus:outline-none focus:border-cyan-400"
                           />
                         </div>
 
                         <div className="space-y-1.5">
-                          <label className="text-xs font-bold text-slate-200">
+                          <label htmlFor="custom-problem-where" className="text-xs font-bold text-slate-200">
                             2. Where are you noticing this?
                           </label>
                           <input
+                            id="custom-problem-where"
                             type="text"
                             value={customProblemWhere}
                             onChange={(e) => setCustomProblemWhere(e.target.value)}
                             placeholder="e.g., Main bypass corridor, Sector 4, or nearby hospital junction"
-                            className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-800 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-cyan-400"
+                            className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-800 text-xs text-white placeholder-slate-400 focus:outline-none focus:border-cyan-400"
                           />
                         </div>
 
                         <div className="space-y-1.5">
-                          <label className="text-xs font-bold text-slate-200">
+                          <label htmlFor="custom-problem-notes" className="text-xs font-bold text-slate-200">
                             3. Tell us anything else you noticed (optional)
                           </label>
                           <textarea
+                            id="custom-problem-notes"
                             rows={2}
                             value={customProblemNotes}
                             onChange={(e) => setCustomProblemNotes(e.target.value)}
                             placeholder="e.g., Long queues back up past the intersection; worse on weekends..."
-                            className="w-full px-3.5 py-2 rounded-xl bg-slate-900 border border-slate-800 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-cyan-400 resize-none"
+                            className="w-full px-3.5 py-2 rounded-xl bg-slate-900 border border-slate-800 text-xs text-white placeholder-slate-400 focus:outline-none focus:border-cyan-400 resize-none"
                           />
                         </div>
 
@@ -2878,8 +2878,9 @@ export const SimulationWorkspace: React.FC<SimulationWorkspaceProps> = ({
                           {showCustomTechInputs && (
                             <div className="grid grid-cols-1 md:grid-cols-2 gap-3 mt-3 p-3 rounded-xl bg-slate-900/60 border border-slate-800">
                               <div className="space-y-1">
-                                <label className="text-[11px] font-semibold text-slate-400">Measurable Symptom</label>
+                                <label htmlFor="custom-tech-symptom" className="text-[11px] font-semibold text-slate-300">Measurable Symptom</label>
                                 <input
+                                  id="custom-tech-symptom"
                                   type="text"
                                   value={customTechSymptom}
                                   onChange={(e) => setCustomTechSymptom(e.target.value)}
@@ -2888,8 +2889,9 @@ export const SimulationWorkspace: React.FC<SimulationWorkspaceProps> = ({
                                 />
                               </div>
                               <div className="space-y-1">
-                                <label className="text-[11px] font-semibold text-slate-400">Engineering Constraint / Threshold</label>
+                                <label htmlFor="custom-tech-limit" className="text-[11px] font-semibold text-slate-300">Engineering Constraint / Threshold</label>
                                 <input
+                                  id="custom-tech-limit"
                                   type="text"
                                   value={customTechLimit}
                                   onChange={(e) => setCustomTechLimit(e.target.value)}
@@ -2963,12 +2965,13 @@ export const SimulationWorkspace: React.FC<SimulationWorkspaceProps> = ({
                   {/* Proposed Action Plain-Language Input */}
                   <div className="space-y-1.5">
                     <div className="flex items-center justify-between">
-                      <label className="text-xs font-bold text-slate-300">2. Propose Action in Plain Language</label>
-                      <span className="text-[10px] text-slate-500 font-medium">
+                      <label htmlFor="action-first-proposal" className="text-xs font-bold text-slate-300">2. Propose Action in Plain Language</label>
+                      <span className="text-[10px] text-slate-400 font-medium">
                         {actionDescription.length}/500 chars
                       </span>
                     </div>
                     <textarea
+                      id="action-first-proposal"
                       rows={2}
                       value={actionDescription}
                       onChange={(e) => handleActionDescriptionChange(e.target.value)}
@@ -2978,29 +2981,31 @@ export const SimulationWorkspace: React.FC<SimulationWorkspaceProps> = ({
                           ? 'Install a booster pump station and upgrade main conduit diameter to maintain minimum service pressure'
                           : 'Reconductor transmission feeder lines and deploy 40 MWh utility-scale battery storage for peak support'
                         }`}
-                      className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-800 text-xs text-white placeholder-slate-500 focus:outline-none focus:border-cyan-400 resize-none"
+                      className="w-full px-3.5 py-2.5 rounded-xl bg-slate-900 border border-slate-800 text-xs text-white placeholder-slate-400 focus:outline-none focus:border-cyan-400 resize-none"
                     />
                   </div>
 
                   {/* Essential Inputs: Scale, Timing, Budget */}
                   <div className="space-y-2">
-                    <label className="text-xs font-bold text-slate-300">3. Essential Model Inputs (Scale & Timing)</label>
-                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5">
+                    <span id="action-first-essential-inputs" className="text-xs font-bold text-slate-300 block">3. Essential Model Inputs (Scale & Timing)</span>
+                    <div className="grid grid-cols-1 sm:grid-cols-3 gap-3.5" role="group" aria-labelledby="action-first-essential-inputs">
                       <div className="p-3 rounded-xl bg-slate-900/80 border border-slate-800 space-y-2">
                         <div className="flex justify-between items-center text-xs">
-                          <span className="text-slate-400">Scale / Magnitude:</span>
+                          <label htmlFor="action-scale-range" className="text-slate-300">Scale / Magnitude:</label>
                           <span className="text-cyan-300 font-bold">Level {actionScale}x</span>
                         </div>
                         <input
+                          id="action-scale-range"
                           type="range"
                           min="1"
                           max="4"
                           step="1"
                           value={actionScale}
+                          aria-valuetext={`Level ${actionScale}x`}
                           onChange={(e) => handleActionScaleChange(Number(e.target.value))}
                           className="w-full accent-cyan-400 cursor-pointer"
                         />
-                        <div className="text-[10px] text-slate-500">
+                        <div className="text-[10px] text-slate-400">
                           {scenario.domain === 'traffic'
                             ? `+${actionScale} dedicated lane(s)`
                             : scenario.domain === 'water'
@@ -3011,36 +3016,40 @@ export const SimulationWorkspace: React.FC<SimulationWorkspaceProps> = ({
 
                       <div className="p-3 rounded-xl bg-slate-900/80 border border-slate-800 space-y-2">
                         <div className="flex justify-between items-center text-xs">
-                          <span className="text-slate-400">Delivery Timing:</span>
+                          <label htmlFor="action-months-range" className="text-slate-300">Delivery Timing:</label>
                           <span className="text-cyan-300 font-bold">{actionMonths} mo</span>
                         </div>
                         <input
+                          id="action-months-range"
                           type="range"
                           min="3"
                           max="36"
                           step="3"
                           value={actionMonths}
+                          aria-valuetext={`${actionMonths} months`}
                           onChange={(e) => handleActionMonthsChange(Number(e.target.value))}
                           className="w-full accent-cyan-400 cursor-pointer"
                         />
-                        <div className="text-[10px] text-slate-500">Estimated civil delivery horizon</div>
+                        <div className="text-[10px] text-slate-400">Estimated civil delivery horizon</div>
                       </div>
 
                       <div className="p-3 rounded-xl bg-slate-900/80 border border-slate-800 space-y-2">
                         <div className="flex justify-between items-center text-xs">
-                          <span className="text-slate-400">Capital Budget:</span>
+                          <label htmlFor="action-capex-range" className="text-slate-300">Capital Budget:</label>
                           <span className="text-cyan-300 font-bold">{formatCostEstimate(actionCapex)}</span>
                         </div>
                         <input
+                          id="action-capex-range"
                           type="range"
                           min="1.0"
                           max="35.0"
                           step="0.5"
                           value={actionCapex}
+                          aria-valuetext={formatCostEstimate(actionCapex)}
                           onChange={(e) => handleActionCapexChange(Number(e.target.value))}
                           className="w-full accent-cyan-400 cursor-pointer"
                         />
-                        <div className="text-[10px] text-slate-500">Estimated budget (${actionCapex.toFixed(1)}M USD reference)</div>
+                        <div className="text-[10px] text-slate-400">Estimated budget (${actionCapex.toFixed(1)}M USD reference)</div>
                       </div>
                     </div>
                   </div>
@@ -3556,7 +3565,7 @@ export const SimulationWorkspace: React.FC<SimulationWorkspaceProps> = ({
                     <span className={`w-2 h-2 rounded-full ${showSimulationCoverage ? 'bg-emerald-400 animate-pulse' : 'bg-slate-500'}`} />
                     <span>Show Available Simulation Areas</span>
                     <span className={`px-1.5 py-0.5 rounded text-[10px] font-extrabold ${
-                      showSimulationCoverage ? 'bg-emerald-500/20 text-emerald-300' : 'bg-slate-800 text-slate-500'
+                      showSimulationCoverage ? 'bg-emerald-500/20 text-emerald-300' : 'bg-slate-800 text-slate-300'
                     }`}>
                       {showSimulationCoverage ? 'ON' : 'OFF'}
                     </span>
@@ -3900,16 +3909,18 @@ export const SimulationWorkspace: React.FC<SimulationWorkspaceProps> = ({
                   {scenario.alternatives.map((alt) => {
                     const isSelected = selectedAltId === alt.id;
                     return (
-                      <div
+                      <button
                         key={alt.id}
+                        type="button"
+                        aria-pressed={isSelected}
                         onClick={() => handleChooseAlt(alt.id)}
-                        className={`p-3.5 rounded-xl border flex flex-col justify-between gap-2 transition cursor-pointer ${
+                        className={`p-3.5 rounded-xl border flex flex-col justify-between gap-2 text-left transition cursor-pointer ${
                           isSelected
                             ? 'bg-indigo-950/80 border-cyan-400 text-white ring-1 ring-cyan-400/50 shadow-md'
                             : 'bg-slate-900/60 border-slate-800 text-slate-300 hover:border-slate-700'
                         }`}
                       >
-                        <div className="space-y-1">
+                        <div className="space-y-1 w-full">
                           <div className="flex items-center justify-between">
                             <span className="px-2 py-0.5 rounded text-[10px] font-bold bg-indigo-600 text-white">
                               Option {alt.tag}
@@ -3923,11 +3934,11 @@ export const SimulationWorkspace: React.FC<SimulationWorkspaceProps> = ({
                           <h4 className="text-xs font-bold text-white">{alt.name}</h4>
                           <p className="text-[10.5px] text-slate-400 line-clamp-2">{alt.description}</p>
                         </div>
-                        <div className="pt-2 border-t border-slate-800/80 flex items-center justify-between text-[11px] font-medium">
+                        <div className="w-full pt-2 border-t border-slate-800/80 flex items-center justify-between text-[11px] font-medium">
                           <span className="text-cyan-300 font-bold">{formatCostEstimate(alt.capexCostMillion)}</span>
                           <span className="text-slate-400">{alt.implementationMonths} mo</span>
                         </div>
-                      </div>
+                      </button>
                     );
                   })}
                 </div>
@@ -4292,7 +4303,7 @@ export const SimulationWorkspace: React.FC<SimulationWorkspaceProps> = ({
                       <div>
                         <div className="flex items-center justify-between text-[11px] font-semibold">
                           <span className="text-cyan-300">{phase.step}</span>
-                          <span className="text-slate-500">{phase.phase}</span>
+                          <span className="text-slate-400">{phase.phase}</span>
                         </div>
                         <h4 className="font-bold text-white mt-1">{phase.label}</h4>
                         <p className="text-[11px] text-slate-400 leading-snug mt-1">{phase.desc}</p>
@@ -4550,7 +4561,7 @@ export const SimulationWorkspace: React.FC<SimulationWorkspaceProps> = ({
                     <div className="text-base font-bold text-white">
                       {formatCostEstimate(selectedAlternative?.capexCostMillion ?? 0)}
                     </div>
-                    <span className="text-[10px] text-slate-500 block font-medium">Model estimate</span>
+                    <span className="text-[10px] text-slate-400 block font-medium">Model estimate</span>
                   </div>
 
                   <div className="p-3.5 rounded-2xl bg-slate-950/80 border border-slate-800 space-y-1">
@@ -4558,7 +4569,7 @@ export const SimulationWorkspace: React.FC<SimulationWorkspaceProps> = ({
                     <div className="text-base font-bold text-white">
                       {selectedAlternative?.implementationMonths ?? 12} Months
                     </div>
-                    <span className="text-[10px] text-slate-500 block font-medium">Civil delivery</span>
+                    <span className="text-[10px] text-slate-400 block font-medium">Civil delivery</span>
                   </div>
 
                   <div className="p-3.5 rounded-2xl bg-slate-950/80 border border-slate-800 space-y-1">
@@ -4566,7 +4577,7 @@ export const SimulationWorkspace: React.FC<SimulationWorkspaceProps> = ({
                     <div className={`text-sm font-bold ${currentResult.feasible ? 'text-emerald-300' : 'text-rose-300'}`}>
                       {currentResult.feasible ? 'Feasible' : 'Exceeded'}
                     </div>
-                    <span className="text-[10px] text-slate-500 block font-medium">AWWA/CPHEEO</span>
+                    <span className="text-[10px] text-slate-400 block font-medium">AWWA/CPHEEO</span>
                   </div>
                 </div>
 
@@ -4613,7 +4624,7 @@ export const SimulationWorkspace: React.FC<SimulationWorkspaceProps> = ({
               </div>
 
               {/* Professional Engineering Estimation Disclaimer */}
-              <p className="text-center text-[11px] text-slate-500 max-w-xl mx-auto leading-relaxed">
+              <p className="text-center text-[11px] text-slate-400 max-w-xl mx-auto leading-relaxed">
                 This is an engineering estimation tool based on mathematical simulation models. It is designed to assist planning and decision-making, not to replace stamped professional engineering drawings or certified safety inspections.
               </p>
             </div>

@@ -1,5 +1,6 @@
-import React, { useState } from 'react';
+import React, { useState, useRef } from 'react';
 import { AssetComparisonChange } from '../models/comparisonChangeNavigator';
+import { useModalA11y } from '../utils/useModalA11y';
 import {
   X,
   Sparkles,
@@ -35,6 +36,8 @@ export const ExplainChangeModal: React.FC<ExplainChangeModalProps> = ({
   isOpen
 }) => {
   const [showTechnicalDetails, setShowTechnicalDetails] = useState(false);
+  const dialogRef = useRef<HTMLDivElement>(null);
+  useModalA11y(Boolean(isOpen && change), onClose, dialogRef);
 
   if (!isOpen || !change) return null;
 
@@ -45,6 +48,7 @@ export const ExplainChangeModal: React.FC<ExplainChangeModalProps> = ({
 
   return (
     <div
+      ref={dialogRef}
       role="dialog"
       aria-modal="true"
       aria-labelledby="explain-modal-title"
@@ -122,7 +126,7 @@ export const ExplainChangeModal: React.FC<ExplainChangeModalProps> = ({
                 <span className="font-mono text-sm sm:text-base font-semibold text-slate-300">
                   {change.beforeValue.toFixed(1)} {change.unit}
                 </span>
-                <ArrowRight className="w-4 h-4 text-slate-500" />
+                <ArrowRight className="w-4 h-4 text-slate-400" />
                 <span
                   className={`font-mono text-sm sm:text-base font-bold ${
                     isImproved
